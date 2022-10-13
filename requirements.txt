@@ -1,0 +1,3 @@
+automata-lib==6.0.2
+python-sat==0.1.7.dev19
+
