@@ -193,7 +193,7 @@ def monotone(aut, solver="m22"):
            x_qi
   return f
 
-def monotone_valuation_to_aut(aut, k, val, state_in_chain):
+def monotone_valuation_to_aut(aut, k, val, state_in_chain, verbose=True):
   """
   If monotone(aut, k) returns (True, val, state_in_chain), the call
   monotone_valuation_to_aut(aut, k, val, state_in_chain) returns a memory
@@ -215,13 +215,15 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain):
       break
       
   # Can be used to display the \Gamma(m) sets for debug
-  for i in range(k):
-    chain_i = []
-    for q in aut.states:
-      if is_state_in_chain(q, i):
-        chain_i.append(q)
-    chain_i.sort()
-    print("\\Gamma_" + str(i) + " = " + str(chain_i))
+  if verbose:
+    smaller_than, _ = compute_comparable(aut)
+    for i in range(k):
+      chain_i = []
+      for q in aut.states:
+        if is_state_in_chain(q, i):
+          chain_i.append(q)
+      chain_i.sort(key = lambda q : len(smaller_than[q]))
+      print("\\Gamma_" + str(i) + " = " + str(chain_i))
   
   # Create transitions
   for i in range(k):
@@ -239,7 +241,7 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain):
   return DFA(states=states, input_symbols=alphabet, transitions=transitions,
              initial_state=initial_state, final_states=set())
 
-def smallest_memory_safety(aut):
+def smallest_memory_safety(aut, verbose=True):
   """
   Return a smallest memory structure for the regular safety objective derived
   from aut (i.e., Safe(L(aut))). Equivalently, return a structure M with
@@ -258,10 +260,12 @@ def smallest_memory_safety(aut):
   
   while l < r - 1:
     mid = (l + r + 1) // 2
-    print("Trying with " + str(mid) + " states...", flush=True)
+    if verbose:
+      print("Trying with " + str(mid) + " states...", flush=True)
     b, val, state_in_chain = f(mid)
-    print("Solved!", end="")
-    print((" P" if b else " Not p") + "ossible with " + str(mid) + " states.",
+    if verbose:
+      print("Solved!", end="")
+      print((" P" if b else " Not p") + "ossible with " + str(mid) + " states.",
           flush=True)
     if b:
       best_val = val
@@ -272,7 +276,7 @@ def smallest_memory_safety(aut):
   
   if best_val is None:
     _, best_val, best_state_in_chain = f(r)
-  return monotone_valuation_to_aut(aut, r, best_val, best_state_in_chain)
+  return monotone_valuation_to_aut(aut, r, best_val, best_state_in_chain, verbose)
 
 # ------------------------------------------------------------
 # MEMORY FOR REGULAR REACHABILITY OBJECTIVES
@@ -280,7 +284,7 @@ def smallest_memory_safety(aut):
 # d_{m, c, m'} is true if there is a transition from m to m' with color c
 def _d_mcm_to_id(vpool):
   return lambda m1, c, m2: vpool.id('d_{0}_{1}_{2}'.format(m1, c, m2))
-  
+
 # p_{m, m', q1, q1', q2, q2'} is true if (m, q1, q2) is reachable in the product
 # M x Q x Q, and there is a path from (m, q1, q2) to (m', q1', q2').
 def _p_mmqqqq_to_id(vpool):
@@ -412,7 +416,7 @@ def progress_consistent_valuation_to_aut(aut, k, val, d_mcm):
   return DFA(states=states, input_symbols=alphabet, transitions=transitions,
              initial_state=initial_state, final_states=set())
 
-def smallest_memory_reachability(aut, monotone=True):
+def smallest_memory_reachability(aut, monotone=True, verbose=True):
   """
   Return a smallest memory structure M that suffices to play optimally for the
   regular reachability objective derived from aut (i.e., Reach(L(aut))).
@@ -435,10 +439,12 @@ def smallest_memory_reachability(aut, monotone=True):
   
   while l < r - 1:
     mid = (l + r + 1) // 2
-    print("Trying with " + str(mid) + " states...", flush=True)
+    if verbose:
+      print("Trying with " + str(mid) + " states...", flush=True)
     b, val, d_mcm = f(mid)
-    print("Solved!", end="")
-    print((" P" if b else " Not p") + "ossible with " + str(mid) + " states.",
+    if verbose:
+      print("Solved!", end="")
+      print((" P" if b else " Not p") + "ossible with " + str(mid) + " states.",
           flush=True)
     if b:
       best_val = val
