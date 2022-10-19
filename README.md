@@ -3,7 +3,7 @@
 This repository contains methods to compute minimal (i.e., with as few states as possible) automatic memory structures that contain sufficient information in order to play optimally in two-player zero-sum turn-based games on graphs for some specific objectives.
 These objectives are *regular reachability* and *regular safety* objectives, i.e., objectives recognizable by reachability or safety automata.
 Equivalent, they are the omega-regular objectives that are open or closed in the Borel hierarchy.
-Technical details and proofs related to this repository can be found in the paper [link is coming](TODO).
+Technical details and proofs related to this repository can be found in [the paper](https://arxiv.org/abs/2210.09703).
 
 # Requirements
 
