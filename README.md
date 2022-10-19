@@ -12,7 +12,7 @@ The two Python packages that we use can be installed with `python3 -m pip instal
 The two packages are:
   - [automata-lib](https://pypi.org/project/automata-lib/) is used to manipulate automata and regular expressions (can be installed separately with `python3 -m pip install automata-lib`).
   - [PySAT](https://pysathq.github.io/) is used to get access to a range of SAT solvers to solve our NP-complete problems (can be installed separately with `python3 -m pip install python-sat`).
-- For visualizing the automata, Graphviz must also be installed (`sudo apt install graphviz` on Ubuntu, and we refer to the [installation page](https://graphviz.org/download/) for other systems; program `dot` should be added to the PATH after the installation).
+- To visualize the automata, Graphviz must also be installed (`sudo apt install graphviz` on Ubuntu, and we refer to the [installation page](https://graphviz.org/download/) for other systems; program `dot` should be added to the PATH after the installation).
 - Examples can be run and visualized with `jupyter notebook` (can be installed with `python3 -m pip install notebook`; check the warnings as program `jupyter` may not be on the PATH after this; with Ubuntu, it is in `~/.local/bin/jupyter`).
 
 # Usage
