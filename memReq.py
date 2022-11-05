@@ -319,23 +319,23 @@ def progress_consistent(aut, monotone=False, solver="m22"):
     cnf = CNF()
     
     # Structure M is complete
-    for m in range(k):
+    for m1 in range(k):
       for c in alphabet:
-        cnf.append([d_mcm(m, c, m2) for m2 in range(k)])
+        cnf.append([d_mcm(m1, c, m2) for m2 in range(k)])
     
     # Initial state is reachable, fixed at 0 for M
     cnf.append([p_mqp(0, 0, init, init, init, init)])
     
     # Reachable states of the product
-    for m in range(k):
-      for q1 in states:
+    for m1 in range(k):
+      for q in states:
         for c in alphabet:
-          q1c = delta[q1][c]
+          qc = delta[q][c]
           for m2 in range(k):
-            # (p_mqp(m, m, q1, q1, q1, q1) AND d_mcm(m, c, m2))
-            # -> p_mqp(m2, m2, q1c, q1c, q1c, q1c)
-            cnf.append([-p_mqp(m, m, q1, q1, q1, q1), -d_mcm(m, c, m2),
-                         p_mqp(m2, m2, q1c, q1c, q1c, q1c)])
+            # (p_mqp(m1, m1, q, q, q, q) AND d_mcm(m1, c, m2))
+            # -> p_mqp(m2, m2, qc, qc, qc, qc)
+            cnf.append([-p_mqp(m1, m1, q, q, q, q), -d_mcm(m1, c, m2),
+                         p_mqp(m2, m2, qc, qc, qc, qc)])
     
     # Consider states in product M x Q x Q not necessarily reachable
     for m in range(k):
@@ -347,9 +347,9 @@ def progress_consistent(aut, monotone=False, solver="m22"):
     for m1, m2 in product(range(k), repeat=2): # product from itertools
       for q1, q2, p1, p2 in product(states, repeat=4):
         for c in alphabet:
+          q2c = delta[q2][c]
+          p2c = delta[p2][c]
           for m3 in range(k):
-            q2c = delta[q2][c]
-            p2c = delta[p2][c]
             cnf.append([-p_mqp(m1, m2, q1, q2, p1, p2), -d_mcm(m2, c, m3),
                          p_mqp(m1, m3, q1, q2c, p1, p2c)])
     
