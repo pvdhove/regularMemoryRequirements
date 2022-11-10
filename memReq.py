@@ -101,11 +101,12 @@ def _z_cijq_to_id(vpool):
 def _each_set_is_a_chain(cnf, k, states, comparable_to, x_qi):
   state_list = list(states)
   n = len(state_list)
-  for i in range(k):
-    for q1_id in range(n):
-      for q2_id in range(q1_id + 1, n):
-        q1, q2 = state_list[q1_id], state_list[q2_id]
-        if q2 not in comparable_to[q1]:
+  for q1_id in range(n):
+    q1 = state_list[q1_id]
+    for q2_id in range(q1_id + 1, n):
+      q2 = state_list[q2_id]
+      if q2 not in comparable_to[q1]:
+        for i in range(k):
           cnf.append([-x_qi(q1, i), -x_qi(q2, i)])
 
 # Encodes the following constraint in CNF:
@@ -134,12 +135,12 @@ def _sets_stable_by_reading_colors(cnf, k, states, alphabet, delta, x_qi, y_cij,
           
   # We now need that z_cijq <=> (x_{q, i} -> x_{d(q, c), j)})
   #                         <=> (-x_{q, i} OR x_{d(q, c), j}).
-  for c in alphabet:
+  for q in states:
     for i in range(k):
-      for j in range(k):
-        for q in states:
+      xqi = x_qi(q, i)
+      for c in alphabet:
+        for j in range(k):
           zcijq = z_cijq(c, i, j, q)
-          xqi = x_qi(q, i)
           xdqcj = x_qi(delta[q][c], j)
           cnf.append([zcijq, xqi])
           cnf.append([zcijq, -xdqcj])
@@ -200,6 +201,9 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain, verbose=True):
   structure M with k states such that L(aut) is M-strongly-monotone.
   This only uses the variable assignment obtained from the SAT solver in the
   monotone(aut, k) call.
+  
+  If verbose is True (which is the default value), displays a monotone
+  decomposition corresponding to the memory structure.
   """
   states = {str(i) for i in range(k)}
   alphabet = aut.input_symbols
@@ -213,7 +217,7 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain, verbose=True):
     if is_state_in_chain(aut.initial_state, i):
       initial_state = str(i)
       break
-      
+  
   # Can be used to display the \Gamma(m) sets for debug
   if verbose:
     smaller_than, _ = compute_comparable(aut)
@@ -222,6 +226,7 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain, verbose=True):
       for q in aut.states:
         if is_state_in_chain(q, i):
           chain_i.append(q)
+      # Display states in order given by the prefix preorder
       chain_i.sort(key = lambda q : len(smaller_than[q]))
       print("\\Gamma_" + str(i) + " = " + str(chain_i))
   
@@ -237,7 +242,7 @@ def monotone_valuation_to_aut(aut, k, val, state_in_chain, verbose=True):
         if ic_j:
           transitions[str(i)][c] = str(j)
           break
-        
+  
   return DFA(states=states, input_symbols=alphabet, transitions=transitions,
              initial_state=initial_state, final_states=set())
 
@@ -327,10 +332,10 @@ def progress_consistent(aut, monotone=False, solver="m22"):
     cnf.append([p_mqp(0, 0, init, init, init, init)])
     
     # Reachable states of the product
-    for m1 in range(k):
-      for q in states:
-        for c in alphabet:
-          qc = delta[q][c]
+    for q in states:
+      for c in alphabet:
+        qc = delta[q][c]
+        for m1 in range(k):
           for m2 in range(k):
             # (p_mqp(m1, m1, q, q, q, q) AND d_mcm(m1, c, m2))
             # -> p_mqp(m2, m2, qc, qc, qc, qc)
@@ -344,12 +349,11 @@ def progress_consistent(aut, monotone=False, solver="m22"):
                      p_mqp(m, m, q1, q1, q2, q2)])
     
     # Augment paths
-    for m1, m2 in product(range(k), repeat=2): # product from itertools
-      for q1, q2, p1, p2 in product(states, repeat=4):
-        for c in alphabet:
-          q2c = delta[q2][c]
-          p2c = delta[p2][c]
-          for m3 in range(k):
+    for q2, p2 in product(states, repeat=2):
+      for c in alphabet:
+        q2c, p2c = delta[q2][c], delta[p2][c]
+        for m1, m2, m3 in product(range(k), repeat=3): # product from itertools
+          for q1, p1 in product(states, repeat=2):
             cnf.append([-p_mqp(m1, m2, q1, q2, p1, p2), -d_mcm(m2, c, m3),
                          p_mqp(m1, m3, q1, q2c, p1, p2c)])
     
@@ -369,7 +373,7 @@ def progress_consistent(aut, monotone=False, solver="m22"):
       comparable_to = {}
       for q in states:
         comparable_to[q] = smaller_than[q].union(greater_than[q])
-            
+      
       # We encode the three properties for M-monotony as in monotone().
       # Note that as M is complete, every reachable state q of aut has an m
       # such that (q, m) is reachable in the product.
@@ -411,7 +415,7 @@ def progress_consistent_valuation_to_aut(aut, k, val, d_mcm):
         if is_mcm(m1, c, m2):
           transitions[str(m1)][c] = str(m2)
           break # Removing this break allows for non-deterministic M, where all
-                # sub-deterministic M are acceptable
+                # sub-deterministic memory structures are acceptable
   
   return DFA(states=states, input_symbols=alphabet, transitions=transitions,
              initial_state=initial_state, final_states=set())

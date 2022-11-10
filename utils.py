@@ -17,8 +17,12 @@ def memory_ready_dfa_from_regex(regex):
   """
   Return a DFA, which has been converted from the regex, and that has been
   transformed to have a single absorbing final state. The language it recognizes
-  may not be the same as the regex, but the induced objectives will be the same.
-  This automaton can be passed to functions computing memory in file memReq.
+  may not be the same as the regex, but the induced regular reachability and
+  safety objectives will be the same.
+  This DFA can be passed to functions computing memory in file memReq.py.
+  
+  The syntax for regular expressions is the one detailed here
+  https://github.com/caleb531/automata#regular-expressions.
   """
   nfa = NFA.from_regex(regex)
   dfa = DFA.from_nfa(nfa)
@@ -51,8 +55,9 @@ def memory_ready_dfa_from_regex(regex):
     k += 1
   
   for q in min_dfa.states:
+    new_name_q = old_to_new[q]
     for c, q2 in min_dfa.transitions[q].items():
-      transitions[old_to_new[q]][c] = old_to_new[q2]
+      transitions[new_name_q][c] = old_to_new[q2]
   
   return DFA(
     states = {old_to_new[q] for q in min_dfa.states},
